@@ -1,0 +1,23 @@
+{
+  "name": "balise",
+  "version": "1.0.0",
+  "description": "Addon for interacting with the Balise engine",
+  "main": "index.js",
+  "typings": "index.d.ts",
+  "scripts": {
+    "test": "node-gyp rebuild && node_modules/.bin/mocha"
+  },
+  "keywords": [
+    "addon",
+    "balise"
+  ],
+  "author": "Thierry BOUDIERE",
+  "license": "ISC",
+  "dependencies": {
+    "bindings": "^1.2.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.5.3"
+  }
+}
