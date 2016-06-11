@@ -66,4 +66,31 @@ describe("BaliseProcess", function () {
             expect(fn).to.throw(Error, "** source error, file \"test/testKO.bal\" line 3:\n\tundefined variable `x\'\n");
         });
     });
+
+    describe("loadBinaryFile", function () {
+
+        it("should return 'undefined' with a valid Balise source file", function () {
+            expect(this.baliseProcess.loadBinaryFile("test/testOK.bba")).to.equal(undefined);
+        });
+
+        it("should throw an exception with invalid arguments", function () {
+            var that = this;
+            var fn;
+
+            fn = function () { that.baliseProcess.loadBinaryFile(7); };
+            expect(fn).to.throw(TypeError, "One string argument is required");
+
+            fn = function () { that.baliseProcess.loadBinaryFile("abc", "def"); };
+            expect(fn).to.throw(TypeError, "One string argument is required");
+
+            fn = function () { that.baliseProcess.loadBinaryFile("abcдФ"); };
+            expect(fn).to.throw(TypeError, "The argument must contain Latin-1 characters");
+        });
+
+        it("should throw an exception with an invalid Balise source file", function () {
+            var that = this;
+            var fn = function () { that.baliseProcess.loadBinaryFile("test/testKO.bba"); };
+            expect(fn).to.throw(Error, "");
+        });
+    });
 });
