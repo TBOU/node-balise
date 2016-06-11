@@ -6,7 +6,7 @@
 
 namespace balise {
 
-extern void Xxx(void);
+extern BaliString GetBaliStringFromV8String(const v8::Local<v8::String>& str);
 
 }  // namespace balise
 
