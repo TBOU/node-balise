@@ -12,8 +12,6 @@ using v8::Value;
 
 void SetGlobalOption(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
-    BaliStatus balStatus;
-    char buffer[64];
 
     if (args.Length() != 2 || !args[0]->IsString() || !args[1]->IsString()) {
         isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Two string arguments are required")));
@@ -30,14 +28,13 @@ void SetGlobalOption(const FunctionCallbackInfo<Value>& args) {
 
     BaliString name = GetBaliStringFromV8String(name_v8);
     BaliString value = GetBaliStringFromV8String(value_v8);
-    balStatus = Bali_globalOption(name, value);
-    //fprintf(stderr, "Bali_globalOption(\"%s\", \"%s\") = %d\n", name, value, balStatus);
+    BaliStatus balStatus = Bali_globalOption(name, value);
     free(name);
     free(value);
     if (balStatus != BSt_OK) {
+        char buffer[64];
         sprintf(buffer, "The operation failed (Balise status = %d)", balStatus);
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
-        return;
     }
 }
 

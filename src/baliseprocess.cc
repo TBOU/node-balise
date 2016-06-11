@@ -1,4 +1,5 @@
 #include "baliseprocess.h"
+#include "utils.h"
 
 namespace balise {
 
@@ -83,8 +84,35 @@ void BaliseProcess::LoadSourceCode(const FunctionCallbackInfo<Value>& args) {
 
 void BaliseProcess::LoadSourceFile(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
+    BaliseProcess* obj = ObjectWrap::Unwrap<BaliseProcess>(args.Holder());
 
-    isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Not yet implemented")));
+    if (args.Length() != 1 || !args[0]->IsString()) {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One string argument is required")));
+        return;
+    }
+
+    Local<String> path_v8 = args[0]->ToString();
+
+    if (!path_v8->ContainsOnlyOneByte()) {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The argument must contain Latin-1 characters")));
+        return;
+    }
+
+    BaliString path = GetBaliStringFromV8String(path_v8);
+    BaliObject balDiag = Bali_makeStringStream();
+    BaliStatus balStatus = Bali_loadSrcLibrary(obj->balProc_, path, balDiag);
+    free(path);
+    if (balStatus != BSt_OK) {
+		BaliObject diagStr;
+        BaliXString xcharBuffer;
+
+		Bali_streamReadAll(balDiag, &diagStr);
+		Bali_getString(diagStr, &xcharBuffer);
+
+        isolate->ThrowException(Exception::Error(String::NewFromTwoByte(isolate, xcharBuffer)));
+		Bali_unuse(diagStr);
+    }
+    Bali_unuse(balDiag);
 }
 
 void BaliseProcess::LoadBinaryFile(const FunctionCallbackInfo<Value>& args) {

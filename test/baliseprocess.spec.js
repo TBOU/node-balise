@@ -3,11 +3,11 @@ var balise = require("../");
 
 describe("setGlobalOption", function () {
 
-    it("should return undefined with correct arguments", function () {
+    it("should return 'undefined' with valid arguments", function () {
         expect(balise.setGlobalOption("defaultCoding", "UTF-8")).to.equal(undefined);
     });
 
-    it("should throw an exception with incorrect arguments", function () {
+    it("should throw an exception with invalid arguments", function () {
         var fn;
 
         fn = function () { balise.setGlobalOption("abc", 7); };
@@ -37,6 +37,33 @@ describe("BaliseProcess", function () {
 
         it("should return a 'BaliseProcess' object", function () {
             expect(this.baliseProcess).to.be.a("BaliseProcess");
+        });
+    });
+
+    describe("loadSourceFile", function () {
+
+        it("should return 'undefined' with a valid Balise source file", function () {
+            expect(this.baliseProcess.loadSourceFile("test/testOK.bal")).to.equal(undefined);
+        });
+
+        it("should throw an exception with invalid arguments", function () {
+            var that = this;
+            var fn;
+
+            fn = function () { that.baliseProcess.loadSourceFile(7); };
+            expect(fn).to.throw(TypeError, "One string argument is required");
+
+            fn = function () { that.baliseProcess.loadSourceFile("abc", "def"); };
+            expect(fn).to.throw(TypeError, "One string argument is required");
+
+            fn = function () { that.baliseProcess.loadSourceFile("abcдФ"); };
+            expect(fn).to.throw(TypeError, "The argument must contain Latin-1 characters");
+        });
+
+        it("should throw an exception with an invalid Balise source file", function () {
+            var that = this;
+            var fn = function () { that.baliseProcess.loadSourceFile("test/testKO.bal"); };
+            expect(fn).to.throw(Error, "** source error, file \"test/testKO.bal\" line 3:\n\tundefined variable `x\'\n");
         });
     });
 });
