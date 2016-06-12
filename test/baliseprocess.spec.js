@@ -23,7 +23,7 @@ describe("setGlobalOption", function () {
         expect(fn).to.throw(TypeError, "The arguments must contain Latin-1 characters");
 
         fn = function () { balise.setGlobalOption("badName", "anyValue"); };
-        expect(fn).to.throw(Error, "Unknown global option (status = -4)");
+        expect(fn).to.throw(Error, "Invalid global option \"badName\" with value \"anyValue\" (status = -4)");
     });
 });
 
@@ -65,7 +65,7 @@ describe("BaliseProcess", function () {
             var fn;
 
             fn = function () { that.baliseProcess.loadSourceFile("test/unknownFile.bal"); };
-            expect(fn).to.throw(Error, "Unknown file (status = -2)");
+            expect(fn).to.throw(Error, "Unknown file \"test/unknownFile.bal\" (status = -2)");
 
             fn = function () { that.baliseProcess.loadSourceFile("test/testKO.bal"); };
             expect(fn).to.throw(Error, "** source error, file \"test/testKO.bal\" line 3:\n\tundefined variable `x\'\n");
@@ -97,10 +97,10 @@ describe("BaliseProcess", function () {
             var fn;
 
             fn = function () { that.baliseProcess.loadBinaryFile("test/unknownFile.bba"); };
-            expect(fn).to.throw(Error, "Unknown file (status = -2)");
+            expect(fn).to.throw(Error, "Unknown file \"test/unknownFile.bba\" (status = -2)");
 
             fn = function () { that.baliseProcess.loadBinaryFile("test/testKO.bba"); };
-            expect(fn).to.throw(Error, "Invalid binary file (status = -7)");
+            expect(fn).to.throw(Error, "Invalid binary file \"test/testKO.bba\" (status = -7)");
         });
     });
 });

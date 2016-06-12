@@ -1,5 +1,6 @@
 #include "baliseprocess.h"
 #include "utils.h"
+#include <string.h>
 
 namespace balise {
 
@@ -101,11 +102,11 @@ void BaliseProcess::LoadSourceFile(const FunctionCallbackInfo<Value>& args) {
     BaliString path = GetBaliStringFromV8String(path_v8);
     BaliObject balDiag = Bali_makeStringStream();
     BaliStatus balStatus = Bali_loadSrcLibrary(obj->balProc_, path, balDiag);
-    free(path);
     if (balStatus == BSt_ACCESS) {
-        char buffer[64];
-        sprintf(buffer, "Unknown file (status = %d)", balStatus);
+        char* buffer = (char *)malloc( (strlen(path)+64) * sizeof(char) );
+        sprintf(buffer, "Unknown file \"%s\" (status = %d)", path, balStatus);
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        free(buffer);
     }
     else if (balStatus != BSt_OK) {
         BaliObject diagStr;
@@ -117,6 +118,7 @@ void BaliseProcess::LoadSourceFile(const FunctionCallbackInfo<Value>& args) {
         isolate->ThrowException(Exception::Error(String::NewFromTwoByte(isolate, xcharBuffer)));
         Bali_unuse(diagStr);
     }
+    free(path);
     Bali_unuse(balDiag);
 }
 
@@ -139,17 +141,19 @@ void BaliseProcess::LoadBinaryFile(const FunctionCallbackInfo<Value>& args) {
     BaliString path = GetBaliStringFromV8String(path_v8);
     BaliObject balDiag = Bali_makeStringStream();
     BaliStatus balStatus = Bali_loadBinLibrary(obj->balProc_, path, balDiag);
-    free(path);
     if (balStatus == BSt_ACCESS) {
-        char buffer[64];
-        sprintf(buffer, "Unknown file (status = %d)", balStatus);
+        char* buffer = (char *)malloc( (strlen(path)+64) * sizeof(char) );
+        sprintf(buffer, "Unknown file \"%s\" (status = %d)", path, balStatus);
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        free(buffer);
     }
     else if (balStatus != BSt_OK) {
-        char buffer[64];
-        sprintf(buffer, "Invalid binary file (status = %d)", balStatus);
+        char* buffer = (char *)malloc( (strlen(path)+64) * sizeof(char) );
+        sprintf(buffer, "Invalid binary file \"%s\" (status = %d)", path, balStatus);
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        free(buffer);
     }
+    free(path);
     Bali_unuse(balDiag);
 }
 

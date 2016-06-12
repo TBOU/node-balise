@@ -1,5 +1,6 @@
 #include "global.h"
 #include "utils.h"
+#include <string.h>
 
 namespace balise {
 
@@ -29,13 +30,14 @@ void SetGlobalOption(const FunctionCallbackInfo<Value>& args) {
     BaliString name = GetBaliStringFromV8String(name_v8);
     BaliString value = GetBaliStringFromV8String(value_v8);
     BaliStatus balStatus = Bali_globalOption(name, value);
+    if (balStatus != BSt_OK) {
+        char* buffer = (char *)malloc( (strlen(name)+strlen(value)+64) * sizeof(char) );
+        sprintf(buffer, "Invalid global option \"%s\" with value \"%s\" (status = %d)", name, value, balStatus);
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        free(buffer);
+    }
     free(name);
     free(value);
-    if (balStatus != BSt_OK) {
-        char buffer[64];
-        sprintf(buffer, "Unknown global option (status = %d)", balStatus);
-        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
-    }
 }
 
 }  // namespace balise
