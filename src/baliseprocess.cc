@@ -102,7 +102,12 @@ void BaliseProcess::LoadSourceFile(const FunctionCallbackInfo<Value>& args) {
     BaliObject balDiag = Bali_makeStringStream();
     BaliStatus balStatus = Bali_loadSrcLibrary(obj->balProc_, path, balDiag);
     free(path);
-    if (balStatus != BSt_OK) {
+    if (balStatus == BSt_ACCESS) {
+        char buffer[64];
+        sprintf(buffer, "Unknown file (status = %d)", balStatus);
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+    }
+    else if (balStatus != BSt_OK) {
         BaliObject diagStr;
         BaliXString xcharBuffer;
 
@@ -135,15 +140,15 @@ void BaliseProcess::LoadBinaryFile(const FunctionCallbackInfo<Value>& args) {
     BaliObject balDiag = Bali_makeStringStream();
     BaliStatus balStatus = Bali_loadBinLibrary(obj->balProc_, path, balDiag);
     free(path);
-    if (balStatus != BSt_OK) {
-        BaliObject diagStr;
-        BaliXString xcharBuffer;
-
-        Bali_streamReadAll(balDiag, &diagStr);
-        Bali_getString(diagStr, &xcharBuffer);
-
-        isolate->ThrowException(Exception::Error(String::NewFromTwoByte(isolate, xcharBuffer)));
-        Bali_unuse(diagStr);
+    if (balStatus == BSt_ACCESS) {
+        char buffer[64];
+        sprintf(buffer, "Unknown file (status = %d)", balStatus);
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+    }
+    else if (balStatus != BSt_OK) {
+        char buffer[64];
+        sprintf(buffer, "Invalid binary file (status = %d)", balStatus);
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
     }
     Bali_unuse(balDiag);
 }

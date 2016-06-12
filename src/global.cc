@@ -33,7 +33,7 @@ void SetGlobalOption(const FunctionCallbackInfo<Value>& args) {
     free(value);
     if (balStatus != BSt_OK) {
         char buffer[64];
-        sprintf(buffer, "The operation failed (Balise status = %d)", balStatus);
+        sprintf(buffer, "Unknown global option (status = %d)", balStatus);
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
     }
 }

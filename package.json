@@ -7,6 +7,10 @@
   "scripts": {
     "test": "node-gyp rebuild && node_modules/.bin/mocha"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TBOU/node-balise"
+  },
   "keywords": [
     "addon",
     "balise"
