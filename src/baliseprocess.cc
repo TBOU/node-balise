@@ -79,8 +79,30 @@ void BaliseProcess::New(const FunctionCallbackInfo<Value>& args) {
 
 void BaliseProcess::LoadSourceCode(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
+    BaliseProcess* obj = ObjectWrap::Unwrap<BaliseProcess>(args.Holder());
 
-    isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Not yet implemented")));
+    if (args.Length() != 1 || !args[0]->IsString()) {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One string argument is required")));
+        return;
+    }
+
+    Local<String> source_v8 = args[0]->ToString();
+
+    BaliObject source = GetObjectStringFromV8String(source_v8);
+    BaliObject balDiag = Bali_makeStringStream();
+    BaliStatus balStatus = Bali_loadStreamSrcLib(obj->balProc_, source, balDiag);
+    if (balStatus != BSt_OK) {
+        BaliObject diagStr;
+        BaliXString xcharBuffer;
+
+        Bali_streamReadAll(balDiag, &diagStr);
+        Bali_getString(diagStr, &xcharBuffer);
+
+        isolate->ThrowException(Exception::Error(String::NewFromTwoByte(isolate, xcharBuffer)));
+        Bali_unuse(diagStr);
+    }
+    Bali_unuse(source);
+    Bali_unuse(balDiag);
 }
 
 void BaliseProcess::LoadSourceFile(const FunctionCallbackInfo<Value>& args) {

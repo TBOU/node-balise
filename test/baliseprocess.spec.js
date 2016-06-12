@@ -40,6 +40,32 @@ describe("BaliseProcess", function () {
         });
     });
 
+    describe("loadSourceCode", function () {
+
+        it("should return 'undefined' with a valid Balise source code", function () {
+            expect(this.baliseProcess.loadSourceCode("var global;\nfunction concat(a, b) { return a + b + \"abcдФ\"; }")).to.equal(undefined);
+        });
+
+        it("should throw an exception with invalid arguments", function () {
+            var that = this;
+            var fn;
+
+            fn = function () { that.baliseProcess.loadSourceCode(7); };
+            expect(fn).to.throw(TypeError, "One string argument is required");
+
+            fn = function () { that.baliseProcess.loadSourceCode("abc", "def"); };
+            expect(fn).to.throw(TypeError, "One string argument is required");
+        });
+
+        it("should throw an exception with an invalid Balise source code", function () {
+            var that = this;
+            var fn;
+
+            fn = function () { that.baliseProcess.loadSourceCode("function bad() { x = 7; }"); };
+            expect(fn).to.throw(Error, "** source error, file \"(stream)\" line 1:\n\tundefined variable `x\'\n");
+        });
+    });
+
     describe("loadSourceFile", function () {
 
         it("should return 'undefined' with a valid Balise source file", function () {
