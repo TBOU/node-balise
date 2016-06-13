@@ -175,7 +175,7 @@ describe("BaliseProcess", function () {
             this.baliseProcess.loadSourceCode("var global;");
         });
 
-        it("should return 'undefined' with a valid Balise variable", function () {
+        it("should return the value with a valid Balise variable", function () {
 
             expect(this.baliseProcess.getGlobalVariable("global")).to.equal(null);
 
