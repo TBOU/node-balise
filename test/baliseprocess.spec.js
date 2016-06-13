@@ -173,6 +173,7 @@ describe("BaliseProcess", function () {
 
         beforeEach(function () {
             this.baliseProcess.loadSourceCode("var global;");
+            this.baliseProcess.loadSourceCode("var globalList = List(7, true);");
         });
 
         it("should return the value with a valid Balise variable", function () {
@@ -216,9 +217,60 @@ describe("BaliseProcess", function () {
             fn = function () { that.baliseProcess.getGlobalVariable("abc"); };
             expect(fn).to.throw(Error, "The variable \"abc\" could not be accessed (status = -3)");
 
-            this.baliseProcess.loadSourceCode("var globalList = List(7, true);");
             fn = function () { that.baliseProcess.getGlobalVariable("globalList"); };
             expect(fn).to.throw(TypeError, "The value of the variable must be a Boolean, a Number, a String or a Void");
+        });
+    });
+
+    describe("executeFunction", function () {
+
+        beforeEach(function () {
+            this.baliseProcess.loadSourceCode("function simpleString() { return \"abcдФ\"; }");
+            this.baliseProcess.loadSourceCode("function identity(obj) { return obj; }");
+            this.baliseProcess.loadSourceCode("function sum(x, y) { return x + y; }");
+            this.baliseProcess.loadSourceCode("function simpleList() { return List(7, true); }");
+        });
+
+        it("should return the value with valid Balise function and arguments", function () {
+
+            expect(this.baliseProcess.executeFunction("simpleString")).to.equal("abcдФ");
+
+            expect(this.baliseProcess.executeFunction("identity", true)).to.equal(true);
+            expect(this.baliseProcess.executeFunction("identity", false)).to.equal(false);
+            expect(this.baliseProcess.executeFunction("identity", -7.3)).to.equal(-7.3);
+            expect(this.baliseProcess.executeFunction("identity", "abcдФ")).to.equal("abcдФ");
+            expect(this.baliseProcess.executeFunction("identity", null)).to.equal(null);
+
+            expect(this.baliseProcess.executeFunction("sum", 7, 3)).to.equal(10);
+            expect(this.baliseProcess.executeFunction("sum", "abc", "def")).to.equal("abcdef");
+        });
+
+        it("should throw an exception with invalid arguments", function () {
+            var that = this;
+            var fn;
+
+            fn = function () { that.baliseProcess.executeFunction(); };
+            expect(fn).to.throw(TypeError, "One or more arguments are required");
+
+            fn = function () { that.baliseProcess.executeFunction(7); };
+            expect(fn).to.throw(TypeError, "The first argument must be a string");
+
+            fn = function () { that.baliseProcess.executeFunction("abcдФ"); };
+            expect(fn).to.throw(TypeError, "The name of the function must contain Latin-1 characters");
+
+            fn = function () { that.baliseProcess.executeFunction("abc", [7, true]); };
+            expect(fn).to.throw(TypeError, "Each optional argument must be a boolean, a number, a string or be null");
+        });
+
+        it("should throw an exception with invalid Balise function or return value", function () {
+            var that = this;
+            var fn;
+
+            fn = function () { that.baliseProcess.executeFunction("abc"); };
+            expect(fn).to.throw(Error, "The function \"abc\" could not be loaded (status = -3)");
+
+            fn = function () { that.baliseProcess.executeFunction("simpleList"); };
+            expect(fn).to.throw(TypeError, "The return value of the function must be a Boolean, a Number, a String or a Void");
         });
     });
 });
