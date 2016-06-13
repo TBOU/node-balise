@@ -4,6 +4,7 @@
 
 namespace balise {
 
+using v8::Boolean;
 using v8::Context;
 using v8::Exception;
 using v8::Function;
@@ -234,8 +235,55 @@ void BaliseProcess::SetGlobalVariable(const FunctionCallbackInfo<Value>& args) {
 
 void BaliseProcess::GetGlobalVariable(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
+    BaliseProcess* obj = ObjectWrap::Unwrap<BaliseProcess>(args.Holder());
 
-    isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Not yet implemented")));
+    if (args.Length() != 1 || !args[0]->IsString()) {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One string argument is required")));
+        return;
+    }
+
+    Local<String> name_v8 = args[0]->ToString();
+
+    if (!name_v8->ContainsOnlyOneByte()) {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The name of the variable must contain Latin-1 characters")));
+        return;
+    }
+
+    BaliString name = GetBaliStringFromV8String(name_v8);
+    BaliObject value = NULL;
+    BaliStatus balStatus = Bali_getGlobal(obj->balProc_, name, &value);
+    if (balStatus != BSt_OK) {
+        char* buffer = (char *)malloc( (strlen(name)+64) * sizeof(char) );
+        sprintf(buffer, "The variable \"%s\" could not be accessed (status = %d)", name, balStatus);
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        free(buffer);
+    }
+    else {
+        BaliObject nothing = Bali_Nothing();
+        if (Bali_isaBoolean(value)) {
+            bool val = Bali_getBoolean(value);
+            args.GetReturnValue().Set(Boolean::New(isolate, val));
+        }
+        else if (Bali_isaNumber(value)) {
+            double val;
+            Bali_getNumber(value, &val);
+            args.GetReturnValue().Set(Number::New(isolate, val));
+        }
+        else if (Bali_isaString(value)) {
+            BaliXString xcharBuffer;
+            Bali_getString(value, &xcharBuffer);
+            args.GetReturnValue().Set(String::NewFromTwoByte(isolate, xcharBuffer));
+        }
+        else if (value == nothing) {
+            args.GetReturnValue().SetNull();
+        }
+        else {
+            isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The value of the variable must be a Boolean, a Number, a String or a Void")));
+        }
+        Bali_unuse(nothing);
+    }
+    free(name);
+    if (value != NULL) Bali_unuse(value);
 }
 
 void BaliseProcess::ExecuteFunction(const FunctionCallbackInfo<Value>& args) {

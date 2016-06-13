@@ -168,4 +168,57 @@ describe("BaliseProcess", function () {
             expect(fn).to.throw(Error, "The variable \"abc\" could not be accessed (status = -3)");
         });
     });
+
+    describe("getGlobalVariable", function () {
+
+        beforeEach(function () {
+            this.baliseProcess.loadSourceCode("var global;");
+        });
+
+        it("should return 'undefined' with a valid Balise variable", function () {
+
+            expect(this.baliseProcess.getGlobalVariable("global")).to.equal(null);
+
+            this.baliseProcess.setGlobalVariable("global", true);
+            expect(this.baliseProcess.getGlobalVariable("global")).to.equal(true);
+
+            this.baliseProcess.setGlobalVariable("global", false);
+            expect(this.baliseProcess.getGlobalVariable("global")).to.equal(false);
+
+            this.baliseProcess.setGlobalVariable("global", -7.3);
+            expect(this.baliseProcess.getGlobalVariable("global")).to.equal(-7.3);
+
+            this.baliseProcess.setGlobalVariable("global", "abcдФ");
+            expect(this.baliseProcess.getGlobalVariable("global")).to.equal("abcдФ");
+
+            this.baliseProcess.setGlobalVariable("global", null);
+            expect(this.baliseProcess.getGlobalVariable("global")).to.equal(null);
+        });
+
+        it("should throw an exception with invalid arguments", function () {
+            var that = this;
+            var fn;
+
+            fn = function () { that.baliseProcess.getGlobalVariable(7); };
+            expect(fn).to.throw(TypeError, "One string argument is required");
+
+            fn = function () { that.baliseProcess.getGlobalVariable(7, "abc"); };
+            expect(fn).to.throw(TypeError, "One string argument is required");
+
+            fn = function () { that.baliseProcess.getGlobalVariable("abcдФ"); };
+            expect(fn).to.throw(TypeError, "The name of the variable must contain Latin-1 characters");
+        });
+
+        it("should throw an exception with an invalid Balise variable", function () {
+            var that = this;
+            var fn;
+
+            fn = function () { that.baliseProcess.getGlobalVariable("abc"); };
+            expect(fn).to.throw(Error, "The variable \"abc\" could not be accessed (status = -3)");
+
+            this.baliseProcess.loadSourceCode("var globalList = List(7, true);");
+            fn = function () { that.baliseProcess.getGlobalVariable("globalList"); };
+            expect(fn).to.throw(Error, "The value of the variable must be a Boolean, a Number, a String or a Void");
+        });
+    });
 });
