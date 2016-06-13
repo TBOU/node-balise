@@ -12,11 +12,11 @@
       "conditions": [
         ["OS=='mac'", {
           "include_dirs": ["sdk/include/_darwin_x64"],
-          "libraries": ["-L<!@(echo $BALISE_HOME)/bin", "-lubal"]
+          "libraries": ["-L<!@(echo $BALISE_LIBDIR)", "-luxbal"]
         }],
         ["OS=='linux'", {
           "include_dirs": ["sdk/include/_linux_x64"],
-          "libraries": ["-luxbal"]
+          "libraries": ["-L<!@(echo $BALISE_LIBDIR)", "-luxbal"]
         }],
         ["OS=='win'", {
           "include_dirs": ["sdk/include/_windows_x64"],

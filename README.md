@@ -4,6 +4,8 @@ Node.js Addon for interacting with the Balise engine.
 
 ## INSTALL
 
+Balise must be installed and the **BALISE_LIBDIR** environment variable should point to the folder containing the Balise dynamic library.
+
 ```bash
 $ npm install balise
 ```
