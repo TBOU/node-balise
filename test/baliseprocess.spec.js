@@ -129,4 +129,43 @@ describe("BaliseProcess", function () {
             expect(fn).to.throw(Error, "Invalid binary file \"test/testKO.bba\" (status = -7)");
         });
     });
+
+    describe("setGlobalVariable", function () {
+
+        beforeEach(function () {
+            this.baliseProcess.loadSourceCode("var global;");
+        });
+
+        it("should return 'undefined' with a valid Balise variable", function () {
+            expect(this.baliseProcess.setGlobalVariable("global", true)).to.equal(undefined);
+            expect(this.baliseProcess.setGlobalVariable("global", -7.3)).to.equal(undefined);
+            expect(this.baliseProcess.setGlobalVariable("global", "abcдФ")).to.equal(undefined);
+            expect(this.baliseProcess.setGlobalVariable("global", null)).to.equal(undefined);
+        });
+
+        it("should throw an exception with invalid arguments", function () {
+            var that = this;
+            var fn;
+
+            fn = function () { that.baliseProcess.setGlobalVariable(7); };
+            expect(fn).to.throw(TypeError, "Two arguments are required");
+
+            fn = function () { that.baliseProcess.setGlobalVariable(7, "abc"); };
+            expect(fn).to.throw(TypeError, "The first argument must be a string");
+
+            fn = function () { that.baliseProcess.setGlobalVariable("abc", [7, true] ); };
+            expect(fn).to.throw(TypeError, "The second argument must be a boolean, a number, a string or be null");
+
+            fn = function () { that.baliseProcess.setGlobalVariable("abcдФ", true); };
+            expect(fn).to.throw(TypeError, "The name of the variable must contain Latin-1 characters");
+        });
+
+        it("should throw an exception with an invalid Balise variable", function () {
+            var that = this;
+            var fn;
+
+            fn = function () { that.baliseProcess.setGlobalVariable("abc", "def"); };
+            expect(fn).to.throw(Error, "The variable \"abc\" could not be accessed (status = -3)");
+        });
+    });
 });
