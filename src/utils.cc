@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <stdlib.h>
 
 namespace balise {
 
