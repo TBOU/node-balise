@@ -181,8 +181,55 @@ void BaliseProcess::LoadBinaryFile(const FunctionCallbackInfo<Value>& args) {
 
 void BaliseProcess::SetGlobalVariable(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
+    BaliseProcess* obj = ObjectWrap::Unwrap<BaliseProcess>(args.Holder());
 
-    isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Not yet implemented")));
+    if (args.Length() != 2) {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Two arguments are required")));
+        return;
+    }
+
+    if (!args[0]->IsString()) {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The first argument must be a string")));
+        return;
+    }
+
+    if (!args[1]->IsBoolean() && !args[1]->IsNumber() && !args[1]->IsString() && !args[1]->IsNull()) {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The second argument must be a boolean, a number, a string or be null")));
+        return;
+    }
+
+    Local<String> name_v8 = args[0]->ToString();
+
+    if (!name_v8->ContainsOnlyOneByte()) {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The name of the variable must contain Latin-1 characters")));
+        return;
+    }
+
+    BaliString name = GetBaliStringFromV8String(name_v8);
+
+    BaliObject value = NULL;
+    if (args[1]->IsBoolean()) {
+        Bali_makeBoolean(args[1]->BooleanValue(), &value);
+    }
+    else if (args[1]->IsNumber()) {
+        Bali_makeNumber(args[1]->NumberValue(), &value);
+    }
+    else if (args[1]->IsString()) {
+        value = GetObjectStringFromV8String(args[1]->ToString());
+    }
+    else if (args[1]->IsNull()) {
+        value = Bali_Nothing();
+    }
+
+    BaliStatus balStatus = Bali_setGlobal(obj->balProc_, name, value);
+    if (balStatus != BSt_OK) {
+        char* buffer = (char *)malloc( (strlen(name)+64) * sizeof(char) );
+        sprintf(buffer, "The variable \"%s\" could not be accessed (status = %d)", name, balStatus);
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        free(buffer);
+    }
+    free(name);
+    Bali_unuse(value);
 }
 
 void BaliseProcess::GetGlobalVariable(const FunctionCallbackInfo<Value>& args) {
