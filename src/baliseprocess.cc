@@ -288,8 +288,105 @@ void BaliseProcess::GetGlobalVariable(const FunctionCallbackInfo<Value>& args) {
 
 void BaliseProcess::ExecuteFunction(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
+    BaliseProcess* obj = ObjectWrap::Unwrap<BaliseProcess>(args.Holder());
 
-    isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Not yet implemented")));
+    if (args.Length() < 1) {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One or more arguments are required")));
+        return;
+    }
+
+    if (!args[0]->IsString()) {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The first argument must be a string")));
+        return;
+    }
+
+    Local<String> name_v8 = args[0]->ToString();
+
+    if (!name_v8->ContainsOnlyOneByte()) {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The name of the function must contain Latin-1 characters")));
+        return;
+    }
+
+    for (int idx = 1; idx < args.Length(); idx++) {
+        if (!args[idx]->IsBoolean() && !args[idx]->IsNumber() && !args[idx]->IsString() && !args[idx]->IsNull()) {
+            isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Each optional argument must be a boolean, a number, a string or be null")));
+            return;
+        }
+    }
+
+    BaliString name = GetBaliStringFromV8String(name_v8);
+    BaliObject balFunction = NULL;
+    BaliStatus balStatus = Bali_getFunction(obj->balProc_, name, &balFunction);
+    if (balStatus != BSt_OK) {
+        char* buffer = (char *)malloc( (strlen(name)+64) * sizeof(char) );
+        sprintf(buffer, "The function \"%s\" could not be loaded (status = %d)", name, balStatus);
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        free(buffer);
+        free(name);
+        return;
+    }
+
+    int balArgsCount = args.Length()-1;
+    BaliObject *balArgs = NULL;
+    if (balArgsCount > 0) {
+        balArgs = (BaliObject *)malloc( balArgsCount * sizeof(BaliObject) );
+    }
+    for (int idx = 1; idx < args.Length(); idx++) {
+        BaliObject value = NULL;
+        if (args[idx]->IsBoolean()) {
+            Bali_makeBoolean(args[idx]->BooleanValue(), &value);
+        }
+        else if (args[idx]->IsNumber()) {
+            Bali_makeNumber(args[idx]->NumberValue(), &value);
+        }
+        else if (args[idx]->IsString()) {
+            value = GetObjectStringFromV8String(args[idx]->ToString());
+        }
+        else if (args[idx]->IsNull()) {
+            value = Bali_Nothing();
+        }
+        balArgs[idx-1] = value;
+    }
+
+    BaliObject value = NULL;
+    balStatus = Bali_perform(obj->balProc_, balFunction, balArgsCount, balArgs, &value, NULL);
+    if (balStatus != BSt_OK) {
+        char* buffer = (char *)malloc( (strlen(name)+64) * sizeof(char) );
+        sprintf(buffer, "The function \"%s\" could not be executed (status = %d)", name, balStatus);
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        free(buffer);
+    }
+    else {
+        BaliObject nothing = Bali_Nothing();
+        if (Bali_isaBoolean(value)) {
+            bool val = Bali_getBoolean(value);
+            args.GetReturnValue().Set(Boolean::New(isolate, val));
+        }
+        else if (Bali_isaNumber(value)) {
+            double val;
+            Bali_getNumber(value, &val);
+            args.GetReturnValue().Set(Number::New(isolate, val));
+        }
+        else if (Bali_isaString(value)) {
+            BaliXString xcharBuffer;
+            Bali_getString(value, &xcharBuffer);
+            args.GetReturnValue().Set(String::NewFromTwoByte(isolate, xcharBuffer));
+        }
+        else if (value == nothing) {
+            args.GetReturnValue().SetNull();
+        }
+        else {
+            isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The return value of the function must be a Boolean, a Number, a String or a Void")));
+        }
+        Bali_unuse(nothing);
+    }
+    free(name);
+    Bali_unuse(balFunction);
+    if (balArgs != NULL) {
+        for (int idx = 0; idx < balArgsCount; idx++) Bali_unuse(balArgs[idx]);
+        free(balArgs);
+    }
+    if (value != NULL) Bali_unuse(value);
 }
 
 }  // namespace balise

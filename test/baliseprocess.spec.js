@@ -218,7 +218,7 @@ describe("BaliseProcess", function () {
 
             this.baliseProcess.loadSourceCode("var globalList = List(7, true);");
             fn = function () { that.baliseProcess.getGlobalVariable("globalList"); };
-            expect(fn).to.throw(Error, "The value of the variable must be a Boolean, a Number, a String or a Void");
+            expect(fn).to.throw(TypeError, "The value of the variable must be a Boolean, a Number, a String or a Void");
         });
     });
 });
