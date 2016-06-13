@@ -38,7 +38,7 @@ myProcess.loadBinaryFile("myOtherBaliseFile.bba");
 
 ### Setting and getting global variables
 
-Values must be **null** or have one of the following types: **boolean**, **number**, **string**.
+Values must be **null** or have one of the following types: **boolean**, **number** or **string**.
 
 ```js
 myProcess.loadSourceCode("var global;");
@@ -49,7 +49,7 @@ var value = myProcess.getGlobalVariable("global"); // returns -7.3
 
 ### Calling functions
 
-Parameters and return values must be **null** or have one of the following types: **boolean**, **number**, **string**.
+Parameters and return values must be **null** or have one of the following types: **boolean**, **number** or **string**.
 
 ```js
 myProcess.loadSourceCode("function identity(obj) { return obj; }");
