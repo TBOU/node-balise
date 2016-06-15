@@ -70,11 +70,9 @@ void BaliseProcess::New(const FunctionCallbackInfo<Value>& args) {
     }
     else {
         // Invoked as plain function 'BaliseProcess()', turn into construct call
-        const int argc = 0;
-        Local<Value> argv[argc] = {};
         Local<Context> context = isolate->GetCurrentContext();
         Local<Function> constr = Local<Function>::New(isolate, constructor);
-        Local<Object> result = constr->NewInstance(context, argc, argv).ToLocalChecked();
+        Local<Object> result = constr->NewInstance(context).ToLocalChecked();
         args.GetReturnValue().Set(result);
     }
 }

@@ -20,7 +20,7 @@
         }],
         ["OS=='win'", {
           "include_dirs": ["sdk/include/_windows_x64"],
-          "libraries": ["sdk/lib/_windows_x64/libuxbal.lib"]
+          "libraries": ["<(PRODUCT_DIR)/../../sdk/lib/_windows_x64/libuxbal.lib"]
         }]
       ]
     }
