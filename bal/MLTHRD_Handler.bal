@@ -14,12 +14,12 @@ main
     MLTHRD_THREAD_NAME = Arguments[0];
     globalOption("threadName", MLTHRD_THREAD_NAME);
 
-    //cout << format("%s is running...\n", MLTHRD_THREAD_NAME);
+    //cout << format("%s is starting...\n", MLTHRD_THREAD_NAME);
 
     var handlerMap = Map(
                         "*", "ignore",
-                        "invoke", Function("invokeHandler"),
-                        "exit", Function("exitHandler")
+                        "invoke", Function("MLTHRD_INVOKE_HANDLER"),
+                        "exit", Function("MLTHRD_EXIT_HANDLER")
                         );
 
     msgServe(-1, handlerMap);
@@ -28,7 +28,7 @@ main
 }
 
 
-function invokeHandler(message)
+function MLTHRD_INVOKE_HANDLER(message)
 {
     var myInvocation = message.value;
     var res = performv(Function(myInvocation.functionName), myInvocation.parameters);
@@ -36,7 +36,7 @@ function invokeHandler(message)
 }
 
 
-function exitHandler(message)
+function MLTHRD_EXIT_HANDLER(message)
 {
     message.msgReply(MLTHRD_THREAD_NAME);
     return false;
