@@ -30,7 +30,7 @@ describe("setGlobalOption", function () {
 describe("BaliseProcess", function () {
 
     beforeEach(function () {
-        this.baliseProcess = new balise.BaliseProcess();
+        this.baliseProcess = balise.BaliseProcess();
     });
 
     describe("constructor", function () {
@@ -271,6 +271,78 @@ describe("BaliseProcess", function () {
 
             fn = function () { that.baliseProcess.executeFunction("simpleList"); };
             expect(fn).to.throw(TypeError, "The return value of the function must be a Boolean, a Number, a String or a Void");
+        });
+    });
+});
+
+describe("BaliseProcessParallel", function () {
+
+    beforeEach(function () {
+        this.timeout(27000);
+
+        var options = {
+            debugMode: false,
+            waitReplyTimeout: 1,
+            sleepTimeWhileBusy: 0.010,
+            maxPhysicalMemoryUsage: 100
+        };
+
+        this.baliseProcessOptions = options;
+        this.baliseProcess = balise.BaliseProcessParallel(3, "test/testParallel.bal", options);
+    });
+
+    describe("constructor", function () {
+
+        it("should return a 'BaliseProcess' object", function () {
+            expect(this.baliseProcess).to.be.a("BaliseProcess");
+        });
+
+        it("should throw an exception with invalid arguments", function () {
+            this.timeout(27000);
+            var that = this;
+            var fn;
+
+            fn = function () { balise.BaliseProcessParallel(3.7, "test/testParallel.bal", this.baliseProcessOptions); };
+            expect(fn).to.throw(TypeError, "The number of threads must be an integer greater than or equal to 1");
+
+            fn = function () { balise.BaliseProcessParallel(3, true, this.baliseProcessOptions); };
+            expect(fn).to.throw(TypeError, "The path of the Balise handler must be a string");
+
+            fn = function () { balise.BaliseProcessParallel(3, "test/unknown.bal", this.baliseProcessOptions); };
+            expect(fn).to.throw(Error, "The threads could not be created for file 'test/unknown.bal'");
+        });
+    });
+
+    describe("executeFunctionParallel", function () {
+
+        it("should return the values with valid Balise function and arguments", function () {
+            this.timeout(27000);
+            var res;
+
+            res = this.baliseProcess.executeFunctionParallel("identitySlow", [[true], [-7.3], ["abcдФ"], [null]]);
+            expect(res).to.eql([true, -7.3, "abcдФ", null]);
+
+            res = this.baliseProcess.executeFunctionParallel("sumSlow", [[3, 7], [-7, 3.7], ["abc", "дФ"]]);
+            expect(res).to.eql([10, -3.3, "abcдФ"]);
+
+            this.baliseProcess.killThreads();
+        });
+
+        it("should throw an exception with invalid arguments", function () {
+            var that = this;
+            var fn;
+
+            fn = function () { that.baliseProcess.executeFunctionParallel(true, []); };
+            expect(fn).to.throw(TypeError, "The name of the function must be a string");
+
+            fn = function () { that.baliseProcess.executeFunctionParallel("identitySlow", true); };
+            expect(fn).to.throw(TypeError, "The list of invocation parameters must be an array");
+
+            fn = function () { that.baliseProcess.executeFunctionParallel("identitySlow", [true, 7]); };
+            expect(fn).to.throw(TypeError, "The parameters of each invocation must be given in an array");
+
+            fn = function () { that.baliseProcess.executeFunctionParallel("identitySlow", [[{}]]); };
+            expect(fn).to.throw(TypeError, "Each invocation parameter must be null or have one of the following types: boolean, number or string");
         });
     });
 });
