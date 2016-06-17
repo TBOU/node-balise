@@ -6,9 +6,10 @@ type MLTHRD_TYPE_INVOCATION(functionName, parameters);
 type MLTHRD_TYPE_INVOCATION_INFO(functionName, parameters, handleCallParameters);
 type MLTHRD_TYPE_THREAD(thread, state, returnMessage);
 
-var MLTHRD_WAIT_REPLY_TIMEOUT = 1;
-var MLTHRD_SLEEP_TIME_WHILE_BUSY = 3;
-var MLTHRD_MAX_PHYSICAL_MEMORY_USAGE = 75;
+var MLTHRD_DEBUG_MODE = false;
+var MLTHRD_WAIT_REPLY_TIMEOUT = 1; // In milliseconds
+var MLTHRD_SLEEP_TIME_WHILE_BUSY = 0.010; // In seconds
+var MLTHRD_MAX_PHYSICAL_MEMORY_USAGE = 100; // Percentage
 
 var MLTHRD_THREADS_COUNT;
 var MLTHRD_THREADS;
@@ -31,7 +32,7 @@ function MLTHRD_CREATE_THREADS(threadsCount, handlerPath, handleResultFunctionNa
     for i = 1 to MLTHRD_THREADS_COUNT {
 
         var threadName = format("Thread_%d", i);
-        var thread = createThread(handlerPath, List(threadName));
+        var thread = createThread(handlerPath, List(threadName, MLTHRD_DEBUG_MODE));
         if isaService(thread) {
             MLTHRD_THREADS << MLTHRD_TYPE_THREAD(thread, MLTHRD_IDLE, nothing);
         }
@@ -91,7 +92,11 @@ function MLTHRD_EXECUTE_INVOCATIONS()
         // Memory load of the machine is examined to determine whether we execute the current invocation
         var physicalMemoryUsage = systemInfo("PhysicalMemoryUsage");
         if nbBusyThreads > 0 and physicalMemoryUsage != nothing and physicalMemoryUsage > MLTHRD_MAX_PHYSICAL_MEMORY_USAGE {
-            //cerr << format("Busy threads: %d/%d\nPhysical memory usage: %$1.2f%%\n\n", nbBusyThreads, MLTHRD_THREADS_COUNT, physicalMemoryUsage);
+
+            if MLTHRD_DEBUG_MODE {
+                cout << format("[%s]: busy threads %d/%d (physical memory usage: %$1.2f%%)\n", timeCurrent().timeFormat("%Y-%m-%d@%H:%M:%S"), nbBusyThreads, MLTHRD_THREADS_COUNT, physicalMemoryUsage);
+            }
+
             sleep(MLTHRD_SLEEP_TIME_WHILE_BUSY);
             continue;
         }
