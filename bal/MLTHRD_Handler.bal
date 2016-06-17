@@ -1,20 +1,21 @@
 type MLTHRD_TYPE_INVOCATION(functionName, parameters);
 
 var MLTHRD_THREAD_NAME;
+var MLTHRD_DEBUG_MODE;
 
 
 main
 {
-    /* The ErrorLimit global variable is set to 0 (= no limit)
-       in order to avoid losing the flow of execution
-       and having the thread blocked.
-    */
     ErrorLimit = 0;
 
     MLTHRD_THREAD_NAME = Arguments[0];
+    MLTHRD_DEBUG_MODE = Arguments[1];
+
     globalOption("threadName", MLTHRD_THREAD_NAME);
 
-    //cout << format("%s is starting...\n", MLTHRD_THREAD_NAME);
+    if MLTHRD_DEBUG_MODE {
+        cout << format("[%s]: %s is starting\n", timeCurrent().timeFormat("%Y-%m-%d@%H:%M:%S"), MLTHRD_THREAD_NAME);
+    }
 
     var handlerMap = Map(
                         "*", "ignore",
@@ -24,13 +25,20 @@ main
 
     msgServe(-1, handlerMap);
 
-    //cout << format("%s is ending...\n", MLTHRD_THREAD_NAME);
+    if MLTHRD_DEBUG_MODE {
+        cout << format("[%s]: %s is ending\n", timeCurrent().timeFormat("%Y-%m-%d@%H:%M:%S"), MLTHRD_THREAD_NAME);
+    }
 }
 
 
 function MLTHRD_INVOKE_HANDLER(message)
 {
     var myInvocation = message.value;
+
+    if MLTHRD_DEBUG_MODE {
+        cout << format("[%s]: %s is calling the function '%s' with parameters '%s'\n", timeCurrent().timeFormat("%Y-%m-%d@%H:%M:%S"), MLTHRD_THREAD_NAME, myInvocation.functionName, myInvocation.parameters);
+    }
+
     var res = performv(Function(myInvocation.functionName), myInvocation.parameters);
     message.msgReply(res);
 }
