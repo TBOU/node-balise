@@ -30,7 +30,7 @@ describe("setGlobalOption", function () {
 describe("BaliseProcess", function () {
 
     beforeEach(function () {
-        this.baliseProcess = balise.BaliseProcess();
+        this.baliseProcess = new balise.BaliseProcess();
     });
 
     describe("constructor", function () {
@@ -275,7 +275,7 @@ describe("BaliseProcess", function () {
     });
 });
 
-describe("BaliseProcessParallel", function () {
+describe("createBaliseProcessParallel", function () {
 
     beforeEach(function () {
         this.timeout(27000);
@@ -288,7 +288,7 @@ describe("BaliseProcessParallel", function () {
         };
 
         this.baliseProcessOptions = options;
-        this.baliseProcess = balise.BaliseProcessParallel(3, "test/testParallel.bal", options);
+        this.baliseProcess = balise.createBaliseProcessParallel(3, "test/testParallel.bal", options);
     });
 
     describe("constructor", function () {
@@ -299,16 +299,15 @@ describe("BaliseProcessParallel", function () {
 
         it("should throw an exception with invalid arguments", function () {
             this.timeout(27000);
-            var that = this;
             var fn;
 
-            fn = function () { balise.BaliseProcessParallel(3.7, "test/testParallel.bal", this.baliseProcessOptions); };
+            fn = function () { balise.createBaliseProcessParallel(3.7, "test/testParallel.bal", this.baliseProcessOptions); };
             expect(fn).to.throw(TypeError, "The number of threads must be an integer greater than or equal to 1");
 
-            fn = function () { balise.BaliseProcessParallel(3, true, this.baliseProcessOptions); };
+            fn = function () { balise.createBaliseProcessParallel(3, true, this.baliseProcessOptions); };
             expect(fn).to.throw(TypeError, "The path of the Balise handler must be a string");
 
-            fn = function () { balise.BaliseProcessParallel(3, "test/unknown.bal", this.baliseProcessOptions); };
+            fn = function () { balise.createBaliseProcessParallel(3, "test/unknown.bal", this.baliseProcessOptions); };
             expect(fn).to.throw(Error, "The threads could not be created for file 'test/unknown.bal'");
         });
     });

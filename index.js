@@ -1,7 +1,7 @@
 var bal = require("bindings")("addon.node");
 var pth = require("path");
 
-bal.BaliseProcessParallel = function (threads, path, options) {
+bal.createBaliseProcessParallel = function (threads, path, options) {
 
     // Checking the parameters
     if (!Number.isInteger(threads) || threads < 1) {
