@@ -36,7 +36,7 @@ function MLTHRD_INVOKE_HANDLER(message)
     var myInvocation = message.value;
 
     if MLTHRD_DEBUG_MODE {
-        cout << format("[%s]: %s is calling the function '%s' with parameters '%s'\n", timeCurrent().timeFormat("%Y-%m-%d@%H:%M:%S"), MLTHRD_THREAD_NAME, myInvocation.functionName, myInvocation.parameters);
+        cout << format("[%s]: %s is calling the function '%s' with parameters %s\n", timeCurrent().timeFormat("%Y-%m-%d@%H:%M:%S"), MLTHRD_THREAD_NAME, myInvocation.functionName, String(myInvocation.parameters));
     }
 
     var res = performv(Function(myInvocation.functionName), myInvocation.parameters);
