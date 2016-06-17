@@ -4,7 +4,7 @@
 
 type MLTHRD_TYPE_INVOCATION(functionName, parameters);
 type MLTHRD_TYPE_INVOCATION_INFO(functionName, parameters, handleCallParameters);
-type MLTHRD_TYPE_THREAD(thread, state, returnMessage);
+type MLTHRD_TYPE_THREAD(thread, state, returnMessage, invocationIndex);
 
 var MLTHRD_DEBUG_MODE = false;
 var MLTHRD_WAIT_REPLY_TIMEOUT = 1; // In milliseconds
@@ -34,7 +34,7 @@ function MLTHRD_CREATE_THREADS(threadsCount, handlerPath, handleResultFunctionNa
         var threadName = format("Thread_%d", i);
         var thread = createThread(handlerPath, List(threadName, MLTHRD_DEBUG_MODE));
         if isaService(thread) {
-            MLTHRD_THREADS << MLTHRD_TYPE_THREAD(thread, MLTHRD_IDLE, nothing);
+            MLTHRD_THREADS << MLTHRD_TYPE_THREAD(thread, MLTHRD_IDLE, nothing, nothing);
         }
         else {
             return false;
@@ -58,6 +58,8 @@ function MLTHRD_ADD_INVOCATION(functionName, parameters, handleCallParameters)
 
 function MLTHRD_EXECUTE_INVOCATIONS()
 {
+    var invocationIndex = 0;
+
     while (MLTHRD_INVOCATIONS_STACK.length() > 0) {
 
         var myInvocation = MLTHRD_INVOCATIONS_STACK[0];
@@ -72,10 +74,11 @@ function MLTHRD_EXECUTE_INVOCATIONS()
                 var message = msgWaitReply(myThread.returnMessage, 0);
                 if message != nothing {
 
-                    perform(MLTHRD_HANDLE_RESULT_FUNCTION, message.value);
+                    perform(MLTHRD_HANDLE_RESULT_FUNCTION, myThread.invocationIndex, message.value);
 
                     myThread.state = MLTHRD_IDLE;
                     myThread.returnMessage = nothing;
+                    myThread.invocationIndex = nothing;
                 }
                 else {
                     nbBusyThreads++;
@@ -110,6 +113,7 @@ function MLTHRD_EXECUTE_INVOCATIONS()
                 myThread.state = MLTHRD_BUSY;
                 performv(MLTHRD_HANDLE_CALL_FUNCTION ,myInvocation.handleCallParameters);
                 myThread.returnMessage = msgSend(myThread.thread, "invoke", MLTHRD_TYPE_INVOCATION(myInvocation.functionName, myInvocation.parameters));
+                myThread.invocationIndex = invocationIndex++;
                 MLTHRD_INVOCATIONS_STACK.delete(0, 1);
                 break;
             }
@@ -130,10 +134,11 @@ function MLTHRD_EXECUTE_INVOCATIONS()
                 var message = msgWaitReply(myThread.returnMessage, MLTHRD_WAIT_REPLY_TIMEOUT);
                 if message != nothing {
 
-                    perform(MLTHRD_HANDLE_RESULT_FUNCTION, message.value);
+                    perform(MLTHRD_HANDLE_RESULT_FUNCTION, myThread.invocationIndex, message.value);
 
                     myThread.state = MLTHRD_IDLE;
                     myThread.returnMessage = nothing;
+                    myThread.invocationIndex = nothing;
                 }
                 else {
                     executing = true;
