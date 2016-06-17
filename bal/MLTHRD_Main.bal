@@ -58,6 +58,10 @@ function MLTHRD_ADD_INVOCATION(functionName, parameters, handleCallParameters)
 
 function MLTHRD_EXECUTE_INVOCATIONS()
 {
+    if MLTHRD_THREADS_COUNT == 0 {
+        return;
+    }
+
     var invocationIndex = 0;
 
     while (MLTHRD_INVOCATIONS_STACK.length() > 0) {
