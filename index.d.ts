@@ -3,7 +3,7 @@
  Types declarations
  */
 
-export type BaliseValue = boolean | number | string;
+export type BaliseValue = boolean | number | string | void;
 
 export function setGlobalOption(name: string, value: string): void;
 

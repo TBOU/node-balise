@@ -32,7 +32,7 @@ function MLTHRD_CREATE_THREADS(threadsCount, handlerPath, handleResultFunctionNa
     for i = 1 to MLTHRD_THREADS_COUNT {
 
         var threadName = format("Thread_%d", i);
-        var thread = createThread(handlerPath, List(threadName, MLTHRD_DEBUG_MODE));
+        var thread = createThread(handlerPath, List(threadName, String(MLTHRD_DEBUG_MODE)));
         if isaService(thread) {
             MLTHRD_THREADS << MLTHRD_TYPE_THREAD(thread, MLTHRD_IDLE, nothing, nothing);
         }

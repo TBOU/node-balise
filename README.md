@@ -25,7 +25,7 @@ bal.setGlobalOption("defaultCoding", "UTF-8");
 ### Creating a new Balise process
 
 ```js
-var myProcess = new bal.BaliseProcess();
+var myProcess = bal.BaliseProcess();
 ```
 
 ### Loading source code / source files / binary files

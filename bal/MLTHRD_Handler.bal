@@ -9,7 +9,7 @@ main
     ErrorLimit = 0;
 
     MLTHRD_THREAD_NAME = Arguments[0];
-    MLTHRD_DEBUG_MODE = Arguments[1];
+    MLTHRD_DEBUG_MODE = Object(Arguments[1]);
 
     globalOption("threadName", MLTHRD_THREAD_NAME);
 
