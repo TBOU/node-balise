@@ -57,6 +57,8 @@ void BaliseProcess::Init(Local<Object> exports) {
 
     // Balise engine initialization
     Bali_initSession(Bali_stdHome((BaliString)"balise"));
+    Bali_loadExtension((BaliString)"dlibuxmlpars");
+    Bali_loadExtension((BaliString)"dliburtfpars");
 }
 
 void BaliseProcess::New(const FunctionCallbackInfo<Value>& args) {
