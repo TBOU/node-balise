@@ -1,6 +1,6 @@
 {
   "name": "balise",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Addon for interacting with the Balise engine",
   "main": "index.js",
   "typings": "index.d.ts",

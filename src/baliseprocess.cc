@@ -57,8 +57,9 @@ void BaliseProcess::Init(Local<Object> exports) {
 
     // Balise engine initialization
     Bali_initSession(Bali_stdHome((BaliString)"balise"));
-    Bali_loadExtension((BaliString)"dlibuxmlpars");
-    Bali_loadExtension((BaliString)"dliburtfpars");
+    Bali_registerEventGenerator(&BaliExt_SpXmlEventGenerator);
+    Bali_registerEventGenerator(&BaliExt_SgmlEventGenerator);
+    Bali_registerEventGenerator(&BaliExt_SpEventGenerator);
 }
 
 void BaliseProcess::New(const FunctionCallbackInfo<Value>& args) {
