@@ -229,6 +229,7 @@ describe("BaliseProcess", function () {
             this.baliseProcess.loadSourceCode("function identity(obj) { return obj; }");
             this.baliseProcess.loadSourceCode("function sum(x, y) { return x + y; }");
             this.baliseProcess.loadSourceCode("function simpleList() { return List(7, true); }");
+            this.baliseProcess.loadSourceCode("function parse(path, parser) { return parseDocument(path, Map(\"generator\", parser, \"novalid\", nothing)).document.root().content(); }");
         });
 
         it("should return the value with valid Balise function and arguments", function () {
@@ -243,6 +244,10 @@ describe("BaliseProcess", function () {
 
             expect(this.baliseProcess.executeFunction("sum", 7, 3)).to.equal(10);
             expect(this.baliseProcess.executeFunction("sum", "abc", "def")).to.equal("abcdef");
+
+            expect(this.baliseProcess.executeFunction("parse", "test/data.xml", "spxml")).to.equal("XML content");
+            expect(this.baliseProcess.executeFunction("parse", "test/data.xml", "xml")).to.equal("XML content");
+            expect(this.baliseProcess.executeFunction("parse", "test/data.rtf", "rtf")).to.equal("RTF content");
         });
 
         it("should throw an exception with invalid arguments", function () {
