@@ -69,4 +69,6 @@ bal.BaliseProcess.prototype.killThreads = function () {
     this.executeFunction("killThreads");
 };
 
+bal.setGlobalOption("ERRORLIMIT", "0");
+
 module.exports = bal;
