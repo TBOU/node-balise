@@ -312,8 +312,8 @@ void BaliseProcess::ExecuteFunction(const FunctionCallbackInfo<Value>& args) {
     }
 
     for (int idx = 1; idx < args.Length(); idx++) {
-        if (!args[idx]->IsBoolean() && !args[idx]->IsNumber() && !args[idx]->IsString() && !args[idx]->IsNull()) {
-            isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Each optional argument must be a boolean, a number, a string or be null")));
+        if (!args[idx]->IsBoolean() && !args[idx]->IsNumber() && !args[idx]->IsString() && !(args[idx]->IsObject() && args[idx]->ToObject()->GetConstructorName()->SameValue(String::NewFromUtf8(isolate, "Buffer"))) && !args[idx]->IsNull()) {
+            isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Each optional argument must be a boolean, a number, a string, a Buffer or be null")));
             return;
         }
     }
@@ -345,6 +345,9 @@ void BaliseProcess::ExecuteFunction(const FunctionCallbackInfo<Value>& args) {
         }
         else if (args[idx]->IsString()) {
             value = GetObjectStringFromV8String(args[idx]->ToString());
+        }
+        else if (args[idx]->IsObject() && args[idx]->ToObject()->GetConstructorName()->SameValue(String::NewFromUtf8(isolate, "Buffer"))) {
+            value = GetObjectStringFromBuffer(args[idx]->ToObject());
         }
         else if (args[idx]->IsNull()) {
             value = Bali_Nothing();

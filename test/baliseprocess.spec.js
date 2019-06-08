@@ -240,6 +240,7 @@ describe("BaliseProcess", function () {
             expect(this.baliseProcess.executeFunction("identity", false)).to.equal(false);
             expect(this.baliseProcess.executeFunction("identity", -7.3)).to.equal(-7.3);
             expect(this.baliseProcess.executeFunction("identity", "abcдФ")).to.equal("abcдФ");
+            expect(this.baliseProcess.executeFunction("identity", Buffer.from([0x45, 0x76, 0x00, 0x61]))).to.equal("Ev");
             expect(this.baliseProcess.executeFunction("identity", null)).to.equal(null);
 
             expect(this.baliseProcess.executeFunction("sum", 7, 3)).to.equal(10);
@@ -264,7 +265,7 @@ describe("BaliseProcess", function () {
             expect(fn).to.throw(TypeError, "The name of the function must contain Latin-1 characters");
 
             fn = function () { that.baliseProcess.executeFunction("abc", [7, true]); };
-            expect(fn).to.throw(TypeError, "Each optional argument must be a boolean, a number, a string or be null");
+            expect(fn).to.throw(TypeError, "Each optional argument must be a boolean, a number, a string, a Buffer or be null");
         });
 
         it("should throw an exception with invalid Balise function or return value", function () {
