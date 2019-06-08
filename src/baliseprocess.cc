@@ -2,6 +2,7 @@
 #include "utils.h"
 #include <stdlib.h>
 #include <string.h>
+#include <node_buffer.h>
 
 namespace balise {
 
@@ -51,6 +52,7 @@ void BaliseProcess::Init(Local<Object> exports) {
     NODE_SET_PROTOTYPE_METHOD(tpl, "setGlobalVariable", SetGlobalVariable);
     NODE_SET_PROTOTYPE_METHOD(tpl, "getGlobalVariable", GetGlobalVariable);
     NODE_SET_PROTOTYPE_METHOD(tpl, "executeFunction", ExecuteFunction);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "executeFunctionReturningBuffer", ExecuteFunctionReturningBuffer);
 
     constructor.Reset(isolate, tpl->GetFunction());
     exports->Set(String::NewFromUtf8(isolate, "BaliseProcess"), tpl->GetFunction());
@@ -291,6 +293,14 @@ void BaliseProcess::GetGlobalVariable(const FunctionCallbackInfo<Value>& args) {
 }
 
 void BaliseProcess::ExecuteFunction(const FunctionCallbackInfo<Value>& args) {
+    ExecuteFunctionInternal(args, false);
+}
+
+void BaliseProcess::ExecuteFunctionReturningBuffer(const FunctionCallbackInfo<Value>& args) {
+    ExecuteFunctionInternal(args, true);
+}
+
+void BaliseProcess::ExecuteFunctionInternal(const FunctionCallbackInfo<Value>& args, bool returnedStringIsBuffer) {
     Isolate* isolate = args.GetIsolate();
     BaliseProcess* obj = ObjectWrap::Unwrap<BaliseProcess>(args.Holder());
 
@@ -375,9 +385,16 @@ void BaliseProcess::ExecuteFunction(const FunctionCallbackInfo<Value>& args) {
             args.GetReturnValue().Set(Number::New(isolate, val));
         }
         else if (Bali_isaString(value)) {
-            BaliXString xcharBuffer;
-            Bali_getString(value, &xcharBuffer);
-            args.GetReturnValue().Set(String::NewFromTwoByte(isolate, xcharBuffer));
+            if (returnedStringIsBuffer) {
+                int length;
+                char* data = GetBufferDataFromObjectString(value, &length);
+                args.GetReturnValue().Set(node::Buffer::New(isolate, data, length).ToLocalChecked());
+            }
+            else {
+                BaliXString xcharBuffer;
+                Bali_getString(value, &xcharBuffer);
+                args.GetReturnValue().Set(String::NewFromTwoByte(isolate, xcharBuffer));
+            }
         }
         else if (value == nothing) {
             args.GetReturnValue().SetNull();

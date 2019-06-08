@@ -12,6 +12,8 @@ extern BaliObject GetObjectStringFromV8String(const v8::Local<v8::String>& str);
 
 extern BaliObject GetObjectStringFromBuffer(const v8::Local<v8::Object>& buf);
 
+extern char* GetBufferDataFromObjectString(const BaliObject buf, int* length);
+
 }  // namespace balise
 
 #endif

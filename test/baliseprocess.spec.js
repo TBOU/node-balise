@@ -240,7 +240,7 @@ describe("BaliseProcess", function () {
             expect(this.baliseProcess.executeFunction("identity", false)).to.equal(false);
             expect(this.baliseProcess.executeFunction("identity", -7.3)).to.equal(-7.3);
             expect(this.baliseProcess.executeFunction("identity", "abcдФ")).to.equal("abcдФ");
-            expect(this.baliseProcess.executeFunction("identity", Buffer.from([0x45, 0x76, 0x00, 0x61]))).to.equal("Ev");
+            expect(this.baliseProcess.executeFunctionReturningBuffer("identity", Buffer.from([0x45, 0x76, 0x00, 0x61]))).to.eql(Buffer.from([0x45, 0x76, 0x00, 0x61]));
             expect(this.baliseProcess.executeFunction("identity", null)).to.equal(null);
 
             expect(this.baliseProcess.executeFunction("sum", 7, 3)).to.equal(10);

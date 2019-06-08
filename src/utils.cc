@@ -50,4 +50,18 @@ BaliObject GetObjectStringFromBuffer(const Local<Object>& buf) {
     return result;
 }
 
+char* GetBufferDataFromObjectString(const BaliObject buf, int* length) {
+    BaliXString xcharBuffer;
+    char* data;
+
+    Bali_getString(buf, &xcharBuffer);
+    *length = Bali_length(buf);
+    data = (char *)malloc( (*length) * sizeof(char) );
+    for (int idx = 0; idx < (*length); idx++) {
+        data[idx] = (char)xcharBuffer[idx];
+    }
+
+    return data;
+}
+
 }  // namespace balise

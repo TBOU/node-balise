@@ -29,6 +29,8 @@ class BaliseProcess : public node::ObjectWrap {
     static void GetGlobalVariable(const v8::FunctionCallbackInfo<v8::Value>& args);
 
     static void ExecuteFunction(const v8::FunctionCallbackInfo<v8::Value>& args);
+    static void ExecuteFunctionReturningBuffer(const v8::FunctionCallbackInfo<v8::Value>& args);
+    static void ExecuteFunctionInternal(const v8::FunctionCallbackInfo<v8::Value>& args, bool returnedStringIsBuffer);
 };
 
 }  // namespace balise
