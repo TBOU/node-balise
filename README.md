@@ -38,7 +38,7 @@ myProcess.loadBinaryFile("myOtherBaliseFile.bba");
 
 ### Setting and getting global variables
 
-Values must be **null** or have one of the following types: **boolean**, **number** or **string**.
+Values have one of the following types: **boolean**, **number**, **string** or **null**.
 
 ```js
 myProcess.loadSourceCode("var global;");
@@ -49,7 +49,9 @@ var value = myProcess.getGlobalVariable("global"); // returns -7.3
 
 ### Calling functions
 
-Parameters and return values must be **null** or have one of the following types: **boolean**, **number** or **string**.
+Parameters and return values have one of the following types: **boolean**, **number**, **string**, **Buffer** or **null**.
+
+When the Balise function returns a String object, it is converted to a **string**. In order to have it converted to a **Buffer**, the ```executeFunctionReturningBuffer``` method must be used.
 
 ```js
 myProcess.loadSourceCode("function identity(obj) { return obj; }");
@@ -60,13 +62,14 @@ var value;
 value = myProcess.executeFunction("identity", true); // returns true
 value = myProcess.executeFunction("identity", -7.3); // returns -7.3
 value = myProcess.executeFunction("identity", "abc"); // returns "abc"
+value = myProcess.executeFunctionReturningBuffer("identity", Buffer.from([0x45, 0x76, 0x00, 0x61])); // returns <Buffer 45 76 00 61>
 value = myProcess.executeFunction("identity", null); // returns null
 
 value = myProcess.executeFunction("sum", 7, 3); // returns 10
 value = myProcess.executeFunction("sum", "abc", "def"); // returns "abcdef"
 ```
 
-### Using Balise threads
+### Using Balise threads (experimental)
 
 A given function can be called multiple times in parallel (with different parameters).
 
