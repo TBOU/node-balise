@@ -51,7 +51,7 @@ var value = myProcess.getGlobalVariable("global"); // returns -7.3
 
 Parameters and return values have one of the following types: **boolean**, **number**, **string**, **Buffer** or **null**.
 
-When the Balise function returns a String object, it is converted to a **string**. In order to have it converted to a **Buffer**, the ```executeFunctionReturningBuffer``` method must be used.
+When the Balise function returns a **String** object, it is converted to a **string**. In order to have it converted to a **Buffer**, the **executeFunctionReturningBuffer** method must be used.
 
 ```js
 myProcess.loadSourceCode("function identity(obj) { return obj; }");
