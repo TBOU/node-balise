@@ -42,7 +42,7 @@ BaliObject GetObjectStringFromBuffer(const Local<Object>& buf) {
     data = node::Buffer::Data(buf);
     xcharBuffer = (BaliXString)malloc( length * sizeof(BaliXChar) );
     for (int idx = 0; idx < length; idx++) {
-        xcharBuffer[idx] = (BaliXChar)data[idx];
+        xcharBuffer[idx] = (unsigned char)data[idx];
     }
     Bali_makeLString(xcharBuffer, length, &result);
     free(xcharBuffer);
@@ -52,16 +52,16 @@ BaliObject GetObjectStringFromBuffer(const Local<Object>& buf) {
 
 char* GetBufferDataFromObjectString(const BaliObject buf, int* length) {
     BaliXString xcharBuffer;
-    char* data;
+    unsigned char* data;
 
     Bali_getString(buf, &xcharBuffer);
     *length = Bali_length(buf);
-    data = (char *)malloc( (*length) * sizeof(char) );
+    data = (unsigned char *)malloc( (*length) * sizeof(unsigned char) );
     for (int idx = 0; idx < (*length); idx++) {
-        data[idx] = (char)xcharBuffer[idx];
+        data[idx] = (unsigned char)(xcharBuffer[idx] & 0xff);
     }
 
-    return data;
+    return (char *)data;
 }
 
 }  // namespace balise

@@ -227,6 +227,7 @@ describe("BaliseProcess", function () {
         beforeEach(function () {
             this.baliseProcess.loadSourceCode("function simpleString() { return \"abcдФ\"; }");
             this.baliseProcess.loadSourceCode("function identity(obj) { return obj; }");
+            this.baliseProcess.loadSourceCode("function getBytes(data) { var bytes = List(); for idx = 0 to data.length()-1 { bytes << data[idx]; } return bytes.toJSON(); }");
             this.baliseProcess.loadSourceCode("function sum(x, y) { return x + y; }");
             this.baliseProcess.loadSourceCode("function simpleList() { return List(7, true); }");
             this.baliseProcess.loadSourceCode("function parse(path, parser) { return parseDocument(path, Map(\"generator\", parser, \"novalid\", nothing)).document.root().content(); }");
@@ -240,7 +241,8 @@ describe("BaliseProcess", function () {
             expect(this.baliseProcess.executeFunction("identity", false)).to.equal(false);
             expect(this.baliseProcess.executeFunction("identity", -7.3)).to.equal(-7.3);
             expect(this.baliseProcess.executeFunction("identity", "abcдФ")).to.equal("abcдФ");
-            expect(this.baliseProcess.executeFunctionReturningBuffer("identity", Buffer.from([0x45, 0x76, 0x00, 0x61]))).to.eql(Buffer.from([0x45, 0x76, 0x00, 0x61]));
+            expect(this.baliseProcess.executeFunctionReturningBuffer("identity", Buffer.from([0x45, 0x76, 0x00, 0x61, 0xff]))).to.eql(Buffer.from([0x45, 0x76, 0x00, 0x61, 0xff]));
+            expect(JSON.parse(this.baliseProcess.executeFunction("getBytes", Buffer.from([0x45, 0x76, 0x00, 0x61, 0xff])))).to.eql([69, 118, 0, 97, 255]);
             expect(this.baliseProcess.executeFunction("identity", null)).to.equal(null);
 
             expect(this.baliseProcess.executeFunction("sum", 7, 3)).to.equal(10);
