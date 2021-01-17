@@ -18,6 +18,7 @@ using v8::Number;
 using v8::Object;
 using v8::Persistent;
 using v8::String;
+using v8::NewStringType;
 using v8::Value;
 
 Persistent<Function> BaliseProcess::constructor;
@@ -42,7 +43,7 @@ void BaliseProcess::Init(Local<Object> exports) {
 
     // Prepare constructor template
     Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate, New);
-    tpl->SetClassName(String::NewFromUtf8(isolate, "BaliseProcess"));
+    tpl->SetClassName(String::NewFromUtf8(isolate, "BaliseProcess", NewStringType::kNormal).ToLocalChecked());
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
     // Prototype
@@ -54,8 +55,8 @@ void BaliseProcess::Init(Local<Object> exports) {
     NODE_SET_PROTOTYPE_METHOD(tpl, "executeFunction", ExecuteFunction);
     NODE_SET_PROTOTYPE_METHOD(tpl, "executeFunctionReturningBuffer", ExecuteFunctionReturningBuffer);
 
-    constructor.Reset(isolate, tpl->GetFunction());
-    exports->Set(String::NewFromUtf8(isolate, "BaliseProcess"), tpl->GetFunction());
+    constructor.Reset(isolate, tpl->GetFunction(isolate->GetCurrentContext()).ToLocalChecked());
+    exports->Set(isolate->GetCurrentContext(), String::NewFromUtf8(isolate, "BaliseProcess", NewStringType::kNormal).ToLocalChecked(), tpl->GetFunction(isolate->GetCurrentContext()).ToLocalChecked()).ToChecked();
 
     // Balise engine initialization
     Bali_initSession(Bali_stdHome((BaliString)"balise"));
@@ -89,13 +90,13 @@ void BaliseProcess::LoadSourceCode(const FunctionCallbackInfo<Value>& args) {
     BaliseProcess* obj = ObjectWrap::Unwrap<BaliseProcess>(args.Holder());
 
     if (args.Length() != 1 || !args[0]->IsString()) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One string argument is required")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One string argument is required", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
-    Local<String> source_v8 = args[0]->ToString();
+    Local<String> source_v8 = args[0]->ToString(isolate->GetCurrentContext()).ToLocalChecked();
 
-    BaliObject source = GetObjectStringFromV8String(source_v8);
+    BaliObject source = GetObjectStringFromV8String(isolate, source_v8);
     BaliObject balDiag = Bali_makeStringStream();
     BaliStatus balStatus = Bali_loadStreamSrcLib(obj->balProc_, source, balDiag);
     if (balStatus != BSt_OK) {
@@ -105,7 +106,7 @@ void BaliseProcess::LoadSourceCode(const FunctionCallbackInfo<Value>& args) {
         Bali_streamReadAll(balDiag, &diagStr);
         Bali_getString(diagStr, &xcharBuffer);
 
-        isolate->ThrowException(Exception::Error(String::NewFromTwoByte(isolate, xcharBuffer)));
+        isolate->ThrowException(Exception::Error(String::NewFromTwoByte(isolate, xcharBuffer, NewStringType::kNormal).ToLocalChecked()));
         Bali_unuse(diagStr);
     }
     Bali_unuse(source);
@@ -117,24 +118,24 @@ void BaliseProcess::LoadSourceFile(const FunctionCallbackInfo<Value>& args) {
     BaliseProcess* obj = ObjectWrap::Unwrap<BaliseProcess>(args.Holder());
 
     if (args.Length() != 1 || !args[0]->IsString()) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One string argument is required")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One string argument is required", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
-    Local<String> path_v8 = args[0]->ToString();
+    Local<String> path_v8 = args[0]->ToString(isolate->GetCurrentContext()).ToLocalChecked();
 
     if (!path_v8->ContainsOnlyOneByte()) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The argument must contain Latin-1 characters")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The argument must contain Latin-1 characters", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
-    BaliString path = GetBaliStringFromV8String(path_v8);
+    BaliString path = GetBaliStringFromV8String(isolate, path_v8);
     BaliObject balDiag = Bali_makeStringStream();
     BaliStatus balStatus = Bali_loadSrcLibrary(obj->balProc_, path, balDiag);
     if (balStatus == BSt_ACCESS) {
         char* buffer = (char *)malloc( (strlen(path)+64) * sizeof(char) );
         sprintf(buffer, "Unknown file \"%s\" (status = %d)", path, balStatus);
-        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer, NewStringType::kNormal).ToLocalChecked()));
         free(buffer);
     }
     else if (balStatus != BSt_OK) {
@@ -144,7 +145,7 @@ void BaliseProcess::LoadSourceFile(const FunctionCallbackInfo<Value>& args) {
         Bali_streamReadAll(balDiag, &diagStr);
         Bali_getString(diagStr, &xcharBuffer);
 
-        isolate->ThrowException(Exception::Error(String::NewFromTwoByte(isolate, xcharBuffer)));
+        isolate->ThrowException(Exception::Error(String::NewFromTwoByte(isolate, xcharBuffer, NewStringType::kNormal).ToLocalChecked()));
         Bali_unuse(diagStr);
     }
     free(path);
@@ -156,30 +157,30 @@ void BaliseProcess::LoadBinaryFile(const FunctionCallbackInfo<Value>& args) {
     BaliseProcess* obj = ObjectWrap::Unwrap<BaliseProcess>(args.Holder());
 
     if (args.Length() != 1 || !args[0]->IsString()) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One string argument is required")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One string argument is required", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
-    Local<String> path_v8 = args[0]->ToString();
+    Local<String> path_v8 = args[0]->ToString(isolate->GetCurrentContext()).ToLocalChecked();
 
     if (!path_v8->ContainsOnlyOneByte()) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The argument must contain Latin-1 characters")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The argument must contain Latin-1 characters", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
-    BaliString path = GetBaliStringFromV8String(path_v8);
+    BaliString path = GetBaliStringFromV8String(isolate, path_v8);
     BaliObject balDiag = Bali_makeStringStream();
     BaliStatus balStatus = Bali_loadBinLibrary(obj->balProc_, path, balDiag);
     if (balStatus == BSt_ACCESS) {
         char* buffer = (char *)malloc( (strlen(path)+64) * sizeof(char) );
         sprintf(buffer, "Unknown file \"%s\" (status = %d)", path, balStatus);
-        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer, NewStringType::kNormal).ToLocalChecked()));
         free(buffer);
     }
     else if (balStatus != BSt_OK) {
         char* buffer = (char *)malloc( (strlen(path)+64) * sizeof(char) );
         sprintf(buffer, "Invalid binary file \"%s\" (status = %d)", path, balStatus);
-        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer, NewStringType::kNormal).ToLocalChecked()));
         free(buffer);
     }
     free(path);
@@ -191,38 +192,42 @@ void BaliseProcess::SetGlobalVariable(const FunctionCallbackInfo<Value>& args) {
     BaliseProcess* obj = ObjectWrap::Unwrap<BaliseProcess>(args.Holder());
 
     if (args.Length() != 2) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Two arguments are required")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Two arguments are required", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
     if (!args[0]->IsString()) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The first argument must be a string")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The first argument must be a string", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
     if (!args[1]->IsBoolean() && !args[1]->IsNumber() && !args[1]->IsString() && !args[1]->IsNull()) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The second argument must be a boolean, a number, a string or be null")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The second argument must be a boolean, a number, a string or be null", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
-    Local<String> name_v8 = args[0]->ToString();
+    Local<String> name_v8 = args[0]->ToString(isolate->GetCurrentContext()).ToLocalChecked();
 
     if (!name_v8->ContainsOnlyOneByte()) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The name of the variable must contain Latin-1 characters")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The name of the variable must contain Latin-1 characters", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
-    BaliString name = GetBaliStringFromV8String(name_v8);
+    BaliString name = GetBaliStringFromV8String(isolate, name_v8);
 
     BaliObject value = NULL;
     if (args[1]->IsBoolean()) {
+#if NODE_MAJOR_VERSION >= 12
+        Bali_makeBoolean(args[1]->BooleanValue(isolate), &value);
+#else
         Bali_makeBoolean(args[1]->BooleanValue(), &value);
+#endif
     }
     else if (args[1]->IsNumber()) {
-        Bali_makeNumber(args[1]->NumberValue(), &value);
+        Bali_makeNumber(args[1]->NumberValue(isolate->GetCurrentContext()).ToChecked(), &value);
     }
     else if (args[1]->IsString()) {
-        value = GetObjectStringFromV8String(args[1]->ToString());
+        value = GetObjectStringFromV8String(isolate, args[1]->ToString(isolate->GetCurrentContext()).ToLocalChecked());
     }
     else if (args[1]->IsNull()) {
         value = Bali_Nothing();
@@ -232,7 +237,7 @@ void BaliseProcess::SetGlobalVariable(const FunctionCallbackInfo<Value>& args) {
     if (balStatus != BSt_OK) {
         char* buffer = (char *)malloc( (strlen(name)+64) * sizeof(char) );
         sprintf(buffer, "The variable \"%s\" could not be accessed (status = %d)", name, balStatus);
-        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer, NewStringType::kNormal).ToLocalChecked()));
         free(buffer);
     }
     free(name);
@@ -244,24 +249,24 @@ void BaliseProcess::GetGlobalVariable(const FunctionCallbackInfo<Value>& args) {
     BaliseProcess* obj = ObjectWrap::Unwrap<BaliseProcess>(args.Holder());
 
     if (args.Length() != 1 || !args[0]->IsString()) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One string argument is required")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One string argument is required", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
-    Local<String> name_v8 = args[0]->ToString();
+    Local<String> name_v8 = args[0]->ToString(isolate->GetCurrentContext()).ToLocalChecked();
 
     if (!name_v8->ContainsOnlyOneByte()) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The name of the variable must contain Latin-1 characters")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The name of the variable must contain Latin-1 characters", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
-    BaliString name = GetBaliStringFromV8String(name_v8);
+    BaliString name = GetBaliStringFromV8String(isolate, name_v8);
     BaliObject value = NULL;
     BaliStatus balStatus = Bali_getGlobal(obj->balProc_, name, &value);
     if (balStatus != BSt_OK) {
         char* buffer = (char *)malloc( (strlen(name)+64) * sizeof(char) );
         sprintf(buffer, "The variable \"%s\" could not be accessed (status = %d)", name, balStatus);
-        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer, NewStringType::kNormal).ToLocalChecked()));
         free(buffer);
     }
     else {
@@ -278,13 +283,13 @@ void BaliseProcess::GetGlobalVariable(const FunctionCallbackInfo<Value>& args) {
         else if (Bali_isaString(value)) {
             BaliXString xcharBuffer;
             Bali_getString(value, &xcharBuffer);
-            args.GetReturnValue().Set(String::NewFromTwoByte(isolate, xcharBuffer));
+            args.GetReturnValue().Set(String::NewFromTwoByte(isolate, xcharBuffer, NewStringType::kNormal).ToLocalChecked());
         }
         else if (value == nothing) {
             args.GetReturnValue().SetNull();
         }
         else {
-            isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The value of the variable must be a Boolean, a Number, a String or a Void")));
+            isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The value of the variable must be a Boolean, a Number, a String or a Void", NewStringType::kNormal).ToLocalChecked()));
         }
         Bali_unuse(nothing);
     }
@@ -305,36 +310,36 @@ void BaliseProcess::ExecuteFunctionInternal(const FunctionCallbackInfo<Value>& a
     BaliseProcess* obj = ObjectWrap::Unwrap<BaliseProcess>(args.Holder());
 
     if (args.Length() < 1) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One or more arguments are required")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "One or more arguments are required", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
     if (!args[0]->IsString()) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The first argument must be a string")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The first argument must be a string", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
-    Local<String> name_v8 = args[0]->ToString();
+    Local<String> name_v8 = args[0]->ToString(isolate->GetCurrentContext()).ToLocalChecked();
 
     if (!name_v8->ContainsOnlyOneByte()) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The name of the function must contain Latin-1 characters")));
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The name of the function must contain Latin-1 characters", NewStringType::kNormal).ToLocalChecked()));
         return;
     }
 
     for (int idx = 1; idx < args.Length(); idx++) {
-        if (!args[idx]->IsBoolean() && !args[idx]->IsNumber() && !args[idx]->IsString() && !(args[idx]->IsObject() && args[idx]->ToObject()->GetConstructorName()->SameValue(String::NewFromUtf8(isolate, "Buffer"))) && !args[idx]->IsNull()) {
-            isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Each optional argument must be a boolean, a number, a string, a Buffer or be null")));
+        if (!args[idx]->IsBoolean() && !args[idx]->IsNumber() && !args[idx]->IsString() && !(args[idx]->IsObject() && args[idx]->ToObject(isolate->GetCurrentContext()).ToLocalChecked()->GetConstructorName()->SameValue(String::NewFromUtf8(isolate, "Buffer", NewStringType::kNormal).ToLocalChecked())) && !args[idx]->IsNull()) {
+            isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Each optional argument must be a boolean, a number, a string, a Buffer or be null", NewStringType::kNormal).ToLocalChecked()));
             return;
         }
     }
 
-    BaliString name = GetBaliStringFromV8String(name_v8);
+    BaliString name = GetBaliStringFromV8String(isolate, name_v8);
     BaliObject balFunction = NULL;
     BaliStatus balStatus = Bali_getFunction(obj->balProc_, name, &balFunction);
     if (balStatus != BSt_OK) {
         char* buffer = (char *)malloc( (strlen(name)+64) * sizeof(char) );
         sprintf(buffer, "The function \"%s\" could not be loaded (status = %d)", name, balStatus);
-        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer, NewStringType::kNormal).ToLocalChecked()));
         free(buffer);
         free(name);
         return;
@@ -348,16 +353,20 @@ void BaliseProcess::ExecuteFunctionInternal(const FunctionCallbackInfo<Value>& a
     for (int idx = 1; idx < args.Length(); idx++) {
         BaliObject value = NULL;
         if (args[idx]->IsBoolean()) {
+#if NODE_MAJOR_VERSION >= 12
+            Bali_makeBoolean(args[idx]->BooleanValue(isolate), &value);
+#else
             Bali_makeBoolean(args[idx]->BooleanValue(), &value);
+#endif
         }
         else if (args[idx]->IsNumber()) {
-            Bali_makeNumber(args[idx]->NumberValue(), &value);
+            Bali_makeNumber(args[idx]->NumberValue(isolate->GetCurrentContext()).ToChecked(), &value);
         }
         else if (args[idx]->IsString()) {
-            value = GetObjectStringFromV8String(args[idx]->ToString());
+            value = GetObjectStringFromV8String(isolate, args[idx]->ToString(isolate->GetCurrentContext()).ToLocalChecked());
         }
-        else if (args[idx]->IsObject() && args[idx]->ToObject()->GetConstructorName()->SameValue(String::NewFromUtf8(isolate, "Buffer"))) {
-            value = GetObjectStringFromBuffer(args[idx]->ToObject());
+        else if (args[idx]->IsObject() && args[idx]->ToObject(isolate->GetCurrentContext()).ToLocalChecked()->GetConstructorName()->SameValue(String::NewFromUtf8(isolate, "Buffer", NewStringType::kNormal).ToLocalChecked())) {
+            value = GetObjectStringFromBuffer(args[idx]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         }
         else if (args[idx]->IsNull()) {
             value = Bali_Nothing();
@@ -370,7 +379,7 @@ void BaliseProcess::ExecuteFunctionInternal(const FunctionCallbackInfo<Value>& a
     if (balStatus != BSt_OK) {
         char* buffer = (char *)malloc( (strlen(name)+64) * sizeof(char) );
         sprintf(buffer, "The function \"%s\" could not be executed (status = %d)", name, balStatus);
-        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer)));
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, buffer, NewStringType::kNormal).ToLocalChecked()));
         free(buffer);
     }
     else {
@@ -393,14 +402,14 @@ void BaliseProcess::ExecuteFunctionInternal(const FunctionCallbackInfo<Value>& a
             else {
                 BaliXString xcharBuffer;
                 Bali_getString(value, &xcharBuffer);
-                args.GetReturnValue().Set(String::NewFromTwoByte(isolate, xcharBuffer));
+                args.GetReturnValue().Set(String::NewFromTwoByte(isolate, xcharBuffer, NewStringType::kNormal).ToLocalChecked());
             }
         }
         else if (value == nothing) {
             args.GetReturnValue().SetNull();
         }
         else {
-            isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The return value of the function must be a Boolean, a Number, a String or a Void")));
+            isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "The return value of the function must be a Boolean, a Number, a String or a Void", NewStringType::kNormal).ToLocalChecked()));
         }
         Bali_unuse(nothing);
     }
