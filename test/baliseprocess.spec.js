@@ -36,7 +36,7 @@ describe("BaliseProcess", function () {
     describe("constructor", function () {
 
         it("should return a 'BaliseProcess' object", function () {
-            expect(this.baliseProcess).to.be.a("BaliseProcess");
+            expect(this.baliseProcess).to.be.an.instanceof(balise.BaliseProcess);
         });
     });
 
@@ -302,7 +302,7 @@ describe("createBaliseProcessParallel", function () {
     describe("constructor", function () {
 
         it("should return a 'BaliseProcess' object", function () {
-            expect(this.baliseProcess).to.be.a("BaliseProcess");
+            expect(this.baliseProcess).to.be.an.instanceof(balise.BaliseProcess);
         });
 
         it("should throw an exception with invalid arguments", function () {

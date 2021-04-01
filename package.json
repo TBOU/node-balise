@@ -1,6 +1,6 @@
 {
   "name": "balise",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Addon for interacting with the Balise engine",
   "main": "index.js",
   "typings": "index.d.ts",
@@ -22,7 +22,7 @@
     "bindings": "^1.5.0"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "mocha": "^6.2.3"
+    "chai": "^4.3.4",
+    "mocha": "^8.3.2"
   }
 }
